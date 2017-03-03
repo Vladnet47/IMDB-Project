@@ -1,13 +1,14 @@
 
 library(httr)
 library(jsonlite)
+library(dplyr)
+library(ggplot2)
 
 # API Documentation: http://www.omdbapi.com/
 # API Endpoint: http://www.omdbapi.com/?
 
-
 # Takes the base URL and query parameters to return json
-returnJSON <- function(base, query.params) {
+getJSON <- function(base, query.params) {
   response <- GET(base, query = query.params)
   
   if(response$status_code == 200) {
@@ -20,6 +21,26 @@ returnJSON <- function(base, query.params) {
   }
 }
 
+# Returns a dataframe of all episodes for given seasons
+getEpisodes <- function(seasons) {
+  result <- data.frame() # initialize result outside of loop
+  
+  # get information for each specified season and combines into single data frame
+  for(season in seasons) {
+    query <- list(t = tv.series, Season = season)
+    current <- getJSON(base, query)
+    current <- current$Episodes %>% mutate(Season = rep.int(season, nrow(current$Episodes))) %>% # add season column
+      select(Season, Episode, Title, Released, imdbRating, imdbID)
+    current$Episode = as.numeric(current$Episode)
+    current$imdbRating = as.numeric(current$imdbRating)
+    result <- rbind(result, current, make.row.names = FALSE) # add information for each season to result
+  }
+  
+  return(result)
+}
+
+
+
 # Initialize variables
 
 tv.series <- "Breaking Bad"
@@ -29,20 +50,25 @@ base <- "http://www.omdbapi.com/"
 # Get information for entire TV series
 
 query <- list(t = tv.series)
-tv.series.info <- returnJSON(base, query)
+tv.series.info <- getJSON(base, query)
 total.seasons <- as.numeric(tv.series.info$totalSeasons)
 
 
 # Get information for each episode of TV series
 
-tv.series.episodes <- data.frame() # initialize variable outside of for loop
-for(season in 1:total.seasons) {
-  query <- list(t = tv.series, Season = season)
-  current <- returnJSON(base, query)
-  current <- current$Episodes
-  current$Episode <- paste0(season, ".", current$Episode) # add proper episode numbers (season.episode (1.5 instead of 5))
-  tv.series.episodes <- rbind(tv.series.episodes, current, make.row.names = FALSE) # add new season to data frame each time
-}
+tv.series.episodes <- getEpisodes(1:total.seasons)
+
+
+# Graph episodes in each season vs their respective IMDB Rating
+
+graph <- ggplot(tv.series.episodes, aes(x = Episode, 
+                                        y = imdbRating, 
+                                        color = factor(Season), 
+                                        group = factor(Season))) +
+  geom_point() +
+  geom_line()
+
+print(graph)
 
 
 
