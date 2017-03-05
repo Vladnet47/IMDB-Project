@@ -53,7 +53,7 @@ server <- function(input, output) {
   })
   
   output$season.selection <- renderUI({
-    sliderInput('season', "Seasons", value = c(1,5), min = 1, max = season.total())
+    sliderInput('season', "Seasons", value = c(1,season.total()), min = 1, max = season.total())
   })
   
   output$table <- renderTable({
