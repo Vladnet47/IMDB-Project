@@ -17,6 +17,9 @@ ui <- fluidPage(
         
         tabPanel("Graph",
                  plotOutput('plot')
+        ),
+        tabPanel("Graph 2",
+                 plotOutput('plot2')
         )
       )
     )

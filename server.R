@@ -37,18 +37,19 @@ server <- function(input, output) {
   season.episodes <- reactive({
     range <- input$season[1]:input$season[2]
     result <- data.frame() # initialize result outside of loop
-    
     # get information for each specified season and combines into single data frame
     for(season in range) {
       query <- list(t = input$title, Season = season)
       current <- getJSON(base, query)
       current <- current$Episodes %>% mutate(Season = rep.int(season, nrow(current$Episodes))) %>% # add season column
         select(Season, Episode, Title, Released, imdbRating, imdbID)
-      current$Episode = as.numeric(current$Episode)
+      current$Episode = round(as.numeric(current$Episode))
       current$imdbRating = as.numeric(current$imdbRating)
       result <- rbind(result, current, make.row.names = FALSE) # add information for each season to result
     }
-    
+    row.count <- nrow(result)
+    episode.number <- 1:row.count
+    result <- mutate(result, episode.num = episode.number)
     return(result)
   })
   
@@ -64,6 +65,15 @@ server <- function(input, output) {
     graph <- ggplot(data = season.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
       geom_point() +
       geom_line()
+    
+    return(graph)
+  })
+  
+  output$plot2 <- renderPlot({
+    graph <- ggplot(data = season.episodes(), aes(x = episode.num, y = imdbRating)) +
+      geom_point() +
+      geom_line() +
+      geom_smooth(method = "lm", se = FALSE)
     
     return(graph)
   })
