@@ -4,6 +4,7 @@ library(httr)
 library(jsonlite)
 library(dplyr)
 library(ggplot2)
+library(DT)
 
 # Base variables
 
@@ -49,7 +50,9 @@ server <- function(input, output) {
     }
     row.count <- nrow(result)
     episode.number <- 1:row.count
-    result <- mutate(result, episode.num = episode.number)
+    result <- mutate(result, Episode = episode.number)
+    colnames(result)[2] <- "Season Episode #"
+    result$Episode <- as.integer(result[[2]])
     return(result)
   })
   
@@ -57,20 +60,22 @@ server <- function(input, output) {
     sliderInput('season', "Seasons", value = c(1,season.total()), min = 1, max = season.total())
   })
   
-  output$table <- renderTable({
-    return(season.episodes())
+  output$table <- renderDataTable({
+    return(as.data.frame(season.episodes()))
   })
   
   output$plot <- renderPlot({
-    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
-      geom_point() +
-      geom_line()
+    dataF <- season.episodes()
+    Seasons <- factor(dataF$Season)
+    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = imdbRating, color = Seasons, group = factor(Season))) +
+      geom_point(size = 3) +
+      geom_line(size = 2)
     
     return(graph)
   })
   
   output$plot2 <- renderPlot({
-    graph <- ggplot(data = season.episodes(), aes(x = episode.num, y = imdbRating)) +
+    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = imdbRating)) +
       geom_point() +
       geom_line() +
       geom_smooth(method = "lm", se = FALSE)

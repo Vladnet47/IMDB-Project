@@ -1,6 +1,11 @@
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(ggplot2)
+library(DT)
 
 ui <- fluidPage(
-  titlePanel("Temporary Title"),
+  titlePanel("TV Show Trends Over Time - Exploring the OMDb API"),
   
   sidebarLayout(
     sidebarPanel(
@@ -12,7 +17,7 @@ ui <- fluidPage(
         type = 'tabs',
         
         tabPanel("Table", 
-                 tableOutput('table')
+                 dataTableOutput('table')
         ),
         
         tabPanel("Graph",
