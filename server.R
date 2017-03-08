@@ -37,14 +37,13 @@ getTotalSeasons <- function(show.name) {
 
 # MAIN SERVER FUNCTION
 server <- function(input, output) {
-  
+
   tv.series.info <- reactive({
     show.number <- c(1:3)
     show.name <- c("placeholder","placeholder","placeholder")
     total.seasons <- c(-1, -1, -1)
 
-    for(current in show.number) {
-      
+    for(current in c(1:ui.counter$count)) {
       text.entry <- input[[paste0("title", current)]]
       
       if(text.entry != "") { # if the current text entry is not empty
@@ -60,47 +59,105 @@ server <- function(input, output) {
   
   tv.series.episodes <- reactive({
     
-    all.episodes <- data.frame()
+    # Initialize outside for loop
+    all.episodes <- data.frame(stringsAsFactors = FALSE)
+    
+    # Show range is all shows that are not called 'placeholder'
     show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
     
+    # Add information about each show to 'all.episodes'
     for(show in show.range) {
       
-      show.episodes <- data.frame()
-      
-      slider.input <- input[[paste0("season", show)]]
-      season.range <- c(slider.input[1]:slider.input[2])
-      
-      for(season in season.range) {
-        query <- list(t = tv.series.info()$show.name[show], Season = season)
-        current.season <- getJSON(base, query)
+      # Check if 'Include in Analysis' is selected in UI
+      if(input[[paste0('include', show)]] == TRUE) {
         
-        # Format json to display information about episodes
-        current.season <- current.season$Episodes
-        total.episodes <- nrow(current.season)
+        # Initialize outside for loop
+        show.episodes <- data.frame(stringsAsFactors = FALSE)
         
-        # Add columns for show
-        current.season <- current.season %>% 
-          mutate(Show = rep.int(show, total.episodes)) %>% 
-          mutate(Season = rep.int(season, total.episodes))
+        # Season range is min-max of slider input for respective show
+        season.range <- c(input[[paste0('season', show)]][1]:input[[paste0('season', show)]][2])
         
-        # Make episode and imdb rating numeric
-        current.season$Episode = as.numeric(current.season$Episode)
-        current.season$imdbRating = as.numeric(current.season$imdbRating)
+        # Add information about each season to 'show.episodes'
+        for(season in season.range) {
+          query <- list(t = tv.series.info()$show.name[tv.series.info()$show.number == show], Season = season)
+          current.season <- getJSON(base, query)
+          
+          # Format json to display information about episodes
+          current.season <- current.season$Episodes
+          show.name <- tv.series.info()$show.name[show]
+          total.episodes <- nrow(current.season)
+          
+          # Add columns for show
+          current.season <- current.season %>% 
+            mutate(Show = rep(show.name, times = total.episodes)) %>% 
+            mutate(Season = rep.int(season, total.episodes))
+          
+          # Make episode and imdb rating numeric
+          current.season$Episode = as.numeric(current.season$Episode)
+          current.season$imdbRating = as.numeric(current.season$imdbRating)
+          
+          # Attach rows from current season to show dataframe
+          show.episodes <- show.episodes %>% rbind(current.season, make.row.names = FALSE)
+        }
         
-        # Attach rows from current season to show dataframe
-        show.episodes <- rbind(show.episodes, current.season, make.row.names = FALSE)
+        # Number episodes chronological
+        show.episodes <- show.episodes %>% 
+          mutate(Episode.Chronological = c(1:nrow(show.episodes))) %>% 
+          select(Show, Season, Episode, Episode.Chronological, Title, imdbRating) # select useful columns
+        
+        # Attach rows from current show to overall dataframe
+        all.episodes <- all.episodes %>% rbind(show.episodes, make.row.names = FALSE)
       }
-      
-      # Number episodes chronological
-      show.episodes <- show.episodes %>% 
-        mutate(Episode.Chronological = c(1:nrow(show.episodes))) %>% 
-        select(Show, Season, Episode, Episode.Chronological, Title, imdbRating) # select useful columns
-      
-      # Attach rows from current show to overall dataframe
-      all.episodes <- rbind(all.episodes, show.episodes, make.row.names = FALSE)
     }
     
     return( all.episodes )
+  })
+  
+  ui.counter <- reactiveValues(count = 1)
+  
+  observeEvent(input$add, {
+    
+    if(ui.counter$count < 3) {
+      
+      ui.counter$count <- ui.counter$count + 1
+      
+      selector.value = "#add"
+      where.value = "beforeBegin"
+      
+      insertUI(
+        selector = selector.value,
+        where = where.value,
+        ui = textInput(paste0('title', ui.counter$count), paste("TV Series", ui.counter$count), placeholder = "Title")
+      )
+      
+      insertUI(
+        selector = selector.value,
+        where = where.value,
+        ui = uiOutput(paste0('season', ui.counter$count))
+      )
+      
+      insertUI(
+        selector = selector.value,
+        where = where.value,
+        ui = uiOutput(paste0('include', ui.counter$count))
+      )
+    }
+  })
+  
+  observeEvent(input$remove, {
+    if(ui.counter$count > 1) {
+      removeUI(
+        selector = paste0("div:has(> #title", ui.counter$count, ")")
+      )
+      removeUI(
+        selector = paste0("div:has(> #season", ui.counter$count, ")")
+      )
+      removeUI(
+        selector = paste0("div:has(> #include", ui.counter$count, ")")
+      )
+      
+      ui.counter$count <- ui.counter$count - 1
+    }
   })
   
   # Slider Widgets
@@ -114,14 +171,14 @@ server <- function(input, output) {
   output$season2 <- renderUI({
     max.seasons <- tv.series.info()$total.seasons[2]
     if(max.seasons > -1) {
-      sliderInput('season1', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
+      sliderInput('season2', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
     }
   })
   
   output$season3 <- renderUI({
     max.seasons <- tv.series.info()$total.seasons[3]
     if(max.seasons > -1) {
-      sliderInput('season1', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
+      sliderInput('season3', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
     }
   })
   
@@ -152,15 +209,7 @@ server <- function(input, output) {
   })
   
   output$table2 <- renderDataTable({
-    return(as.data.frame(tv.series.episodes()))
-  })
-  
-  output$test <- renderText({
-    if(input$title1 == "") {
-      return( "yes")
-    } else {
-      return(paste0(">", input$title1, "<"))
-    }
+    formatStyle(datatable(tv.series.episodes(), rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
   })
   
   output$plot1 <- renderPlot({
@@ -172,7 +221,7 @@ server <- function(input, output) {
   })
   
   output$plot2 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating)) +
+    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating)) +
       geom_point() +
       geom_line() +
       geom_smooth(method = "lm", se = FALSE)
@@ -180,9 +229,6 @@ server <- function(input, output) {
     return(graph)
   })
 }
-
-
-
 
 
 
