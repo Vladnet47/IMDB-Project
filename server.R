@@ -174,7 +174,7 @@ server <- function(input, output) {
   })
   
   output$plot2 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating)) +
+    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show, group = Show)) +
       geom_point() +
       geom_line() +
       geom_smooth(method = "lm", se = FALSE)
