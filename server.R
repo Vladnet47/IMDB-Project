@@ -43,7 +43,7 @@ server <- function(input, output) {
     show.name <- c("placeholder","placeholder","placeholder")
     total.seasons <- c(-1, -1, -1)
 
-    for(current in c(1:ui.counter$count)) {
+    for(current in show.number) {
       text.entry <- input[[paste0("title", current)]]
       
       if(text.entry != "") { # if the current text entry is not empty
@@ -111,53 +111,6 @@ server <- function(input, output) {
     }
     
     return( all.episodes )
-  })
-  
-  ui.counter <- reactiveValues(count = 1)
-  
-  observeEvent(input$add, {
-    
-    if(ui.counter$count < 3) {
-      
-      ui.counter$count <- ui.counter$count + 1
-      
-      selector.value = "#add"
-      where.value = "beforeBegin"
-      
-      insertUI(
-        selector = selector.value,
-        where = where.value,
-        ui = textInput(paste0('title', ui.counter$count), paste("TV Series", ui.counter$count), placeholder = "Title")
-      )
-      
-      insertUI(
-        selector = selector.value,
-        where = where.value,
-        ui = uiOutput(paste0('season', ui.counter$count))
-      )
-      
-      insertUI(
-        selector = selector.value,
-        where = where.value,
-        ui = uiOutput(paste0('include', ui.counter$count))
-      )
-    }
-  })
-  
-  observeEvent(input$remove, {
-    if(ui.counter$count > 1) {
-      removeUI(
-        selector = paste0("div:has(> #title", ui.counter$count, ")")
-      )
-      removeUI(
-        selector = paste0("div:has(> #season", ui.counter$count, ")")
-      )
-      removeUI(
-        selector = paste0("div:has(> #include", ui.counter$count, ")")
-      )
-      
-      ui.counter$count <- ui.counter$count - 1
-    }
   })
   
   # Slider Widgets

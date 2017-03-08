@@ -20,8 +20,13 @@ ui <- dashboardPage(
     uiOutput('season1'),
     uiOutput('include1'),
     
-    actionButton('add', "Add Show"),
-    actionButton('remove', "Remove Show")
+    textInput('title2', "TV Series 2", placeholder = "Title"),
+    uiOutput('season2'),
+    uiOutput('include2'),
+    
+    textInput('title3', "TV Series 3", placeholder = "Title"),
+    uiOutput('season3'),
+    uiOutput('include3')
   ),
   
   dashboardBody(
