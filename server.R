@@ -42,18 +42,26 @@ server <- function(input, output) {
     for(season in range) {
       query <- list(t = input$title, Season = season)
       current <- getJSON(base, query)
+      if(!is.null(current$Episodes)){
       current <- current$Episodes %>% mutate(Season = rep.int(season, nrow(current$Episodes))) %>% # add season column
         select(Season, Episode, Title, Released, imdbRating, imdbID)
       current$Episode = round(as.numeric(current$Episode))
       current$imdbRating = as.numeric(current$imdbRating)
       result <- rbind(result, current, make.row.names = FALSE) # add information for each season to result
+      } else{
+        stop("That's Not A Real TV Show")
+      }
     }
     row.count <- nrow(result)
     episode.number <- 1:row.count
+    if(!is.null(result)){
     result <- mutate(result, Episode = episode.number)
     colnames(result)[2] <- "Season Episode #"
     result$Episode <- as.integer(result[[2]])
     return(result)
+    } else{
+      stop("That's Not A Real TV Show")
+    }
   })
   
   output$season.selection <- renderUI({

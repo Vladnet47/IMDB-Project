@@ -3,8 +3,9 @@ library(jsonlite)
 library(dplyr)
 library(ggplot2)
 library(DT)
+library(shinythemes)
 
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("flatly"),
   titlePanel("TV Show Trends Over Time - Exploring the OMDb API"),
   
   sidebarLayout(
@@ -16,14 +17,14 @@ ui <- fluidPage(
       tabsetPanel(
         type = 'tabs',
         
-        tabPanel("Table", 
+        tabPanel("Raw Data Table", 
                  dataTableOutput('table')
         ),
         
-        tabPanel("Graph",
+        tabPanel("Seasonal Trends",
                  plotOutput('plot')
         ),
-        tabPanel("Graph 2",
+        tabPanel("Episodal Trends",
                  plotOutput('plot2')
         )
       )
