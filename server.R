@@ -58,6 +58,51 @@ server <- function(input, output) {
     return( info )
   })
   
+  tv.series.episodes <- reactive({
+    
+    all.episodes <- data.frame()
+    show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
+    
+    for(show in show.range) {
+      
+      show.episodes <- data.frame()
+      
+      slider.input <- input[[paste0("season", show)]]
+      season.range <- c(slider.input[1]:slider.input[2])
+      
+      for(season in season.range) {
+        query <- list(t = tv.series.info()$show.name[show], Season = season)
+        current.season <- getJSON(base, query)
+        
+        # Format json to display information about episodes
+        current.season <- current.season$Episodes
+        total.episodes <- nrow(current.season)
+        
+        # Add columns for show
+        current.season <- current.season %>% 
+          mutate(Show = rep.int(show, total.episodes)) %>% 
+          mutate(Season = rep.int(season, total.episodes))
+        
+        # Make episode and imdb rating numeric
+        current.season$Episode = as.numeric(current.season$Episode)
+        current.season$imdbRating = as.numeric(current.season$imdbRating)
+        
+        # Attach rows from current season to show dataframe
+        show.episodes <- rbind(show.episodes, current.season, make.row.names = FALSE)
+      }
+      
+      # Number episodes chronological
+      show.episodes <- show.episodes %>% 
+        mutate(Episode.Chronological = c(1:nrow(show.episodes))) %>% 
+        select(Show, Season, Episode, Episode.Chronological, Title, imdbRating) # select useful columns
+      
+      # Attach rows from current show to overall dataframe
+      all.episodes <- rbind(all.episodes, show.episodes, make.row.names = FALSE)
+    }
+    
+    return( all.episodes )
+  })
+  
   # Slider Widgets
   output$season1 <- renderUI({
     max.seasons <- tv.series.info()$total.seasons[1]
@@ -118,63 +163,19 @@ server <- function(input, output) {
     }
   })
   
-  tv.series.episodes <- reactive({
-    
-    all.episodes <- data.frame()
-    show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
-    
-    for(show in show.range) {
-      
-      show.episodes <- data.frame()
-      
-      slider.input <- input[[paste0("season", show)]]
-      season.range <- c(slider.input[1]:slider.input[2])
-      
-      for(season in season.range) {
-        query <- list(t = tv.series.info()$show.name[show], Season = season)
-        current.season <- getJSON(base, query)
-        
-        # Format json to display information about episodes
-        current.season <- current.season$Episodes
-        total.episodes <- nrow(current.season)
-        
-        # Add columns for show
-        current.season <- current.season %>% 
-          mutate(Show = rep.int(show, total.episodes)) %>% 
-          mutate(Season = rep.int(season, total.episodes))
-        
-        # Make episode and imdb rating numeric
-        current.season$Episode = as.numeric(current.season$Episode)
-        current.season$imdbRating = as.numeric(current.season$imdbRating)
-        
-        # Attach rows from current season to show dataframe
-        show.episodes <- rbind(show.episodes, current.season, make.row.names = FALSE)
-      }
-      
-      # Number episodes chronological
-      show.episodes <- show.episodes %>% 
-        mutate(Episode.Chronological = c(1:nrow(show.episodes))) %>% 
-        select(Show, Season, Episode, Episode.Chronological, Title, imdbRating) # select useful columns
-      
-      # Attach rows from current show to overall dataframe
-      all.episodes <- rbind(all.episodes, show.episodes, make.row.names = FALSE)
-    }
-    
-    return( all.episodes )
-  })
-  
-  output$plot <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Seasons), group = factor(Season))) +
+  output$plot1 <- renderPlot({
+    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
       geom_point(size = 3) +
       geom_line(size = 2)
-    
+
     return(graph)
   })
   
   output$plot2 <- renderPlot({
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating)) +
       geom_point() +
-      geom_line()
+      geom_line() +
+      geom_smooth(method = "lm", se = FALSE)
     
     return(graph)
   })
