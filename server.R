@@ -31,7 +31,7 @@ getTotalSeasons <- function(show.name) {
   if(is.null(json)) {
     return( -1 )
   } else {
-    return( as.numeric(json$totalSeasons[]) )
+    return(as.numeric(json$totalSeasons[]) )
   }
 }
 
@@ -148,7 +148,7 @@ server <- function(input, output) {
   })
   
   output$table1 <- renderDataTable({
-    return(as.data.frame(tv.series.info()))
+    formatStyle(datatable(tv.series.info(), rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
   })
   
   output$table2 <- renderDataTable({
