@@ -37,7 +37,7 @@ getTotalSeasons <- function(show.name) {
 
 # MAIN SERVER FUNCTION
 server <- function(input, output) {
-  
+
   tv.series.info <- reactive({
     show.number <- c(1:3)
     show.name <- c("placeholder","placeholder","placeholder")
@@ -53,15 +53,17 @@ server <- function(input, output) {
       }
     }
     
-    info <- data.frame(show.number, show.name, total.seasons, stringsAsFactors = FALSE)
-    
-    return( info )
+    data$info <- data.frame(show.number, show.name, total.seasons, stringsAsFactors = FALSE)
   })
   
-  tv.series.episodes <- reactive({
+  
+  
+  tv.series.episodes <- reactiveValues({
     
     all.episodes <- data.frame()
-    show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
+    
+    show.range <- tv.series.info()
+    show.range <- show.range$show.number
     
     for(show in show.range) {
       
@@ -100,7 +102,7 @@ server <- function(input, output) {
       all.episodes <- rbind(all.episodes, show.episodes, make.row.names = FALSE)
     }
     
-    return( all.episodes )
+    return( show.range[1] )
   })
   
   # Slider Widgets
@@ -148,7 +150,7 @@ server <- function(input, output) {
   })
   
   output$table1 <- renderDataTable({
-    return(as.data.frame(tv.series.info()))
+    return(data$info)
   })
   
   output$table2 <- renderDataTable({
@@ -156,11 +158,7 @@ server <- function(input, output) {
   })
   
   output$test <- renderText({
-    if(input$title1 == "") {
-      return( "yes")
-    } else {
-      return(paste0(">", input$title1, "<"))
-    }
+    return( tv.series.episodes() )
   })
   
   output$plot1 <- renderPlot({
@@ -172,7 +170,7 @@ server <- function(input, output) {
   })
   
   output$plot2 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating)) +
+    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating)) +
       geom_point() +
       geom_line() +
       geom_smooth(method = "lm", se = FALSE)

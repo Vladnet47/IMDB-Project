@@ -32,7 +32,8 @@ ui <- fluidPage(
         type = 'tabs',
         
         tabPanel("Table 1", 
-                 dataTableOutput('table1')
+                 dataTableOutput('table1'),
+                 textOutput('test')
         ),
 
         tabPanel("Raw Data Table", 
