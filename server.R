@@ -57,6 +57,8 @@ server <- function(input, output) {
     if(!is.null(result)){
     result <- mutate(result, Episode = episode.number)
     colnames(result)[2] <- "Season Episode #"
+    colnames(result)[5] <- "Rating"
+    colnames(result)[6] <- "IMDb ID"
     result$Episode <- as.integer(result[[2]])
     return(result)
     } else{
@@ -69,13 +71,13 @@ server <- function(input, output) {
   })
   
   output$table <- renderDataTable({
-    return(as.data.frame(season.episodes()))
+    formatStyle(datatable(season.episodes(), rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
   })
   
   output$plot <- renderPlot({
     dataF <- season.episodes()
     Seasons <- factor(dataF$Season)
-    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = imdbRating, color = Seasons, group = factor(Season))) +
+    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = Rating, color = Seasons, group = factor(Season))) +
       geom_point(size = 3) +
       geom_line(size = 2)
     
@@ -83,7 +85,7 @@ server <- function(input, output) {
   })
   
   output$plot2 <- renderPlot({
-    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = imdbRating)) +
+    graph <- ggplot(data = season.episodes(), aes(x = Episode, y = Rating)) +
       geom_point() +
       geom_line() +
       geom_smooth(method = "lm", se = FALSE)
