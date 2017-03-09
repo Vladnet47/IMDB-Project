@@ -48,7 +48,9 @@ ui <- dashboardPage(
                box(background = "yellow", 
                    width = 500, 
                    solidHeader = TRUE,
-                   dataTableOutput('table2', height = 500)
+                   dataTableOutput('table2', height = 500),
+                   dataTableOutput('table3', height = 500),
+                   dataTableOutput('table4', height = 500)
                    
                )
       ),

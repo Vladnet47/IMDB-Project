@@ -24,6 +24,8 @@ getJSON <- function(base, query.params) {
   }
 }
 
+
+
 getTotalSeasons <- function(show.name) {
   query <- list(t = show.name)
   json <- getJSON(base, query)
@@ -56,6 +58,17 @@ server <- function(input, output) {
     
     return( info )
   })
+  
+  make.Data.Table <- function(x){
+    show.name <- tv.series.info()$show.name[x]
+    if(show.name != "placeholder") {
+      data <- tv.series.episodes() %>% filter(., Show == show.name) 
+      colnames(data)[4] <- "Chronological Episode"
+      colnames(data)[5] <- "Episode Title"
+      colnames(data)[6] <- "IMDb Rating"
+      formatStyle(datatable(data, rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
+    }
+  }
   
   tv.series.episodes <- reactive({
     
@@ -162,8 +175,18 @@ server <- function(input, output) {
   })
   
   output$table2 <- renderDataTable({
-    formatStyle(datatable(tv.series.episodes(), rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
+    make.Data.Table(1)
   })
+  
+  output$table3 <- renderDataTable({
+    make.Data.Table(2)
+  })
+  
+  output$table4 <- renderDataTable({
+    make.Data.Table(3)
+  })
+  
+  
   
   output$plot1 <- renderPlot({
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
