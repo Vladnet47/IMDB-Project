@@ -4,6 +4,8 @@ library(jsonlite)
 library(dplyr)
 library(ggplot2)
 library(DT)
+library(plotly)
+
 
 # Base variables
 
@@ -31,7 +33,7 @@ getTotalSeasons <- function(show.name) {
   if(is.null(json)) {
     return( -1 )
   } else {
-    return( as.numeric(json$totalSeasons[]) )
+    return(as.numeric(json$totalSeasons[]) )
   }
 }
 
@@ -42,9 +44,8 @@ server <- function(input, output) {
     show.number <- c(1:3)
     show.name <- c("placeholder","placeholder","placeholder")
     total.seasons <- c(-1, -1, -1)
-
+    
     for(current in show.number) {
-      
       text.entry <- input[[paste0("title", current)]]
       
       if(text.entry != "") { # if the current text entry is not empty
@@ -58,49 +59,88 @@ server <- function(input, output) {
     return( info )
   })
   
+  
+  make.Data.Table <- function(x){
+    show.name <- tv.series.info()$show.name[x]
+    if(show.name != "placeholder") {
+      data <- tv.series.episodes() %>% filter(., Show == show.name) 
+      colnames(data)[4] <- "Chronological Episode"
+      colnames(data)[5] <- "Episode Title"
+      colnames(data)[6] <- "IMDb Rating"
+      formatStyle(datatable(data, rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
+    }
+  }
+  
+  make.Season.Graph <- function(d) {
+    show.name <- tv.series.info()$show.name[d]
+    
+    data <- tv.series.episodes() %>% filter(., Show == show.name)
+    if(show.name != "placeholder") {
+      graph <- ggplot(data , aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
+        geom_point(size = 3) +
+        geom_line(size = 2) +
+        ggtitle(show.name)
+      
+      return(graph)  
+    }
+  }
+  
   tv.series.episodes <- reactive({
     
-    all.episodes <- data.frame()
+    # Initialize outside for loop
+    all.episodes <- data.frame(stringsAsFactors = FALSE)
+    
+    
+    # Show range is all shows that are not called 'placeholder'
     show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
     
+    # Add information about each show to 'all.episodes'
     for(show in show.range) {
       
-      show.episodes <- data.frame()
-      
-      slider.input <- input[[paste0("season", show)]]
-      season.range <- c(slider.input[1]:slider.input[2])
-      
-      for(season in season.range) {
-        query <- list(t = tv.series.info()$show.name[show], Season = season)
-        current.season <- getJSON(base, query)
+      # Check if 'Include in Analysis' is selected in UI
+      if(input[[paste0('include', show)]] == TRUE) {
         
-        # Format json to display information about episodes
-        current.season <- current.season$Episodes
-        total.episodes <- nrow(current.season)
+        # Initialize outside for loop
+        show.episodes <- data.frame(stringsAsFactors = FALSE)
         
-        # Add columns for show
-        current.season <- current.season %>% 
-          mutate(Show = rep.int(show, total.episodes)) %>% 
-          mutate(Season = rep.int(season, total.episodes))
+        # Season range is min-max of slider input for respective show
+        season.range <- c(input[[paste0('season', show)]][1]:input[[paste0('season', show)]][2])
         
-        # Make episode and imdb rating numeric
-        current.season$Episode = as.numeric(current.season$Episode)
-        current.season$imdbRating = as.numeric(current.season$imdbRating)
+        # Add information about each season to 'show.episodes'
+        for(season in season.range) {
+          query <- list(t = tv.series.info()$show.name[tv.series.info()$show.number == show], Season = season)
+          current.season <- getJSON(base, query)
+          
+          # Format json to display information about episodes
+          current.season <- current.season$Episodes
+          show.name <- tv.series.info()$show.name[show]
+          total.episodes <- nrow(current.season)
+          
+          # Add columns for show
+          current.season <- current.season %>% 
+            mutate(Show = rep(show.name, times = total.episodes)) %>% 
+            mutate(Season = rep.int(season, total.episodes))
+          
+          # Make episode and imdb rating numeric
+          current.season$Episode = as.numeric(current.season$Episode)
+          current.season$imdbRating = as.numeric(current.season$imdbRating)
+          
+          # Attach rows from current season to show dataframe
+          show.episodes <- show.episodes %>% rbind(current.season, make.row.names = FALSE)
+        }
         
-        # Attach rows from current season to show dataframe
-        show.episodes <- rbind(show.episodes, current.season, make.row.names = FALSE)
+        # Number episodes chronological
+        show.episodes <- show.episodes %>% 
+          mutate(Episode.Chronological = c(1:nrow(show.episodes))) %>% 
+          select(Show, Season, Episode, Episode.Chronological, Title, imdbRating) # select useful columns
+        
+        # Attach rows from current show to overall dataframe
+        all.episodes <- all.episodes %>% rbind(show.episodes, make.row.names = FALSE)
       }
-      
-      # Number episodes chronological
-      show.episodes <- show.episodes %>% 
-        mutate(Episode.Chronological = c(1:nrow(show.episodes))) %>% 
-        select(Show, Season, Episode, Episode.Chronological, Title, imdbRating) # select useful columns
-      
-      # Attach rows from current show to overall dataframe
-      all.episodes <- rbind(all.episodes, show.episodes, make.row.names = FALSE)
     }
     
     return( all.episodes )
+    
   })
   
   # Slider Widgets
@@ -114,14 +154,14 @@ server <- function(input, output) {
   output$season2 <- renderUI({
     max.seasons <- tv.series.info()$total.seasons[2]
     if(max.seasons > -1) {
-      sliderInput('season1', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
+      sliderInput('season2', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
     }
   })
   
   output$season3 <- renderUI({
     max.seasons <- tv.series.info()$total.seasons[3]
     if(max.seasons > -1) {
-      sliderInput('season1', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
+      sliderInput('season3', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
     }
   })
   
@@ -148,41 +188,45 @@ server <- function(input, output) {
   })
   
   output$table1 <- renderDataTable({
-    return(as.data.frame(tv.series.info()))
+    formatStyle(datatable(tv.series.info(), rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
   })
   
   output$table2 <- renderDataTable({
-    return(as.data.frame(tv.series.episodes()))
+    
+    make.Data.Table(1)
   })
   
-  output$test <- renderText({
-    if(input$title1 == "") {
-      return( "yes")
-    } else {
-      return(paste0(">", input$title1, "<"))
-    }
+  output$table3 <- renderDataTable({
+    make.Data.Table(2)
   })
   
-  output$plot1 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
-      geom_point(size = 3) +
-      geom_line(size = 2)
-
-    return(graph)
+  output$table4 <- renderDataTable({
+    make.Data.Table(3)
   })
   
-  output$plot2 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating)) +
+  output$seasonplot1 <- renderPlot({
+    make.Season.Graph(1)
+  })
+  
+  output$seasonplot2 <- renderPlot({
+    make.Season.Graph(2)
+  })
+  
+  output$seasonplot3 <- renderPlot({
+    make.Season.Graph(3)
+  })
+  
+  output$plot2 <- renderPlotly({
+    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show)) +
       geom_point() +
       geom_line() +
+      labs(x = "Episodes Chronologically", y = "IMDB Rating") +
       geom_smooth(method = "lm", se = FALSE)
     
-    return(graph)
+    
+    return(ggplotly(graph))
   })
 }
-
-
-
 
 
 
