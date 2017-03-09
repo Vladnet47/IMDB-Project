@@ -194,6 +194,7 @@ server <- function(input, output) {
 
   output$plot1 <- renderPlot({
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
+      labs(x = "Episode Number", y = "IMDB Rating")
       geom_point(size = 3) +
       geom_line(size = 2)
     
