@@ -1,0 +1,10 @@
+name: tv_show_analysis
+title: TV Show Analysis
+account: amogh
+server: shinyapps.io
+appId: 162554
+bundleId: 740592
+url: https://amogh.shinyapps.io/tv_show_analysis/
+when: 1489087704.30969
+asMultiple: FALSE
+asStatic: FALSE

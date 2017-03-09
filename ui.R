@@ -70,7 +70,7 @@ ui <- dashboardPage(
         box(
          background = "yellow", 
          width = 500, 
-         height = 1500,
+         height = 1000,
          solidHeader = TRUE,
          plotlyOutput('plot2', height = 500)
         )
