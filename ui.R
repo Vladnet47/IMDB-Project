@@ -5,6 +5,7 @@ library(ggplot2)
 library(DT)
 library(shinythemes)
 library(shinydashboard)
+library(plotly)
 
 
 ui <- dashboardPage( 
@@ -67,7 +68,8 @@ ui <- dashboardPage(
                box(background = "maroon", 
                    width = 500, 
                    solidHeader = TRUE,
-                   plotOutput('plot2', height = 500)
+                   plotlyOutput('plot2', height = 500)
+
                )
       )
     )

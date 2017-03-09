@@ -4,6 +4,8 @@ library(jsonlite)
 library(dplyr)
 library(ggplot2)
 library(DT)
+library(plotly)
+
 
 # Base variables
 
@@ -23,8 +25,6 @@ getJSON <- function(base, query.params) {
     return(NULL)
   }
 }
-
-
 
 getTotalSeasons <- function(show.name) {
   query <- list(t = show.name)
@@ -59,6 +59,7 @@ server <- function(input, output) {
     return( info )
   })
   
+
   make.Data.Table <- function(x){
     show.name <- tv.series.info()$show.name[x]
     if(show.name != "placeholder") {
@@ -75,6 +76,7 @@ server <- function(input, output) {
     # Initialize outside for loop
     all.episodes <- data.frame(stringsAsFactors = FALSE)
     
+
     # Show range is all shows that are not called 'placeholder'
     show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
     
@@ -124,6 +126,7 @@ server <- function(input, output) {
     }
     
     return( all.episodes )
+
   })
   
   # Slider Widgets
@@ -175,6 +178,7 @@ server <- function(input, output) {
   })
   
   output$table2 <- renderDataTable({
+
     make.Data.Table(1)
   })
   
@@ -187,7 +191,7 @@ server <- function(input, output) {
   })
   
   
-  
+
   output$plot1 <- renderPlot({
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
       geom_point(size = 3) +
@@ -196,13 +200,14 @@ server <- function(input, output) {
     return(graph)
   })
   
-  output$plot2 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show, group = Show)) +
+  output$plot2 <- renderPlotly({
+    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show)) +
       geom_point() +
       geom_line() +
       geom_smooth(method = "lm", se = FALSE)
     
-    return(graph)
+
+    return(ggplotly(graph))
   })
 }
 
