@@ -1,0 +1,11 @@
+name: IMDB-Project
+title: IMDB-Project
+account: vladnet47
+server: shinyapps.io
+appId: 162373
+bundleId: 739715
+url: https://vladnet47.shinyapps.io/IMDB-Project/
+when: 1489049708.95301
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: README.md

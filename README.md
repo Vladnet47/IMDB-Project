@@ -12,4 +12,4 @@ This interactive application allows the user to investigate the popularity of va
 
 **Website URL**
 
-[Tv Show Analysis](insert url)
+[Tv Show Analysis](https://vladnet47.shinyapps.io/IMDB-Project/)
