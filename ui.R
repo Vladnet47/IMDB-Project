@@ -42,7 +42,9 @@ ui <- dashboardPage(
            width = 500, 
            solidHeader = TRUE,
            dataTableOutput('table1', height = 500),
+           br(),
            dataTableOutput('table2', height = 500),
+           br(),
            dataTableOutput('table3', height = 500)
         )
       ),
@@ -54,7 +56,11 @@ ui <- dashboardPage(
          width = 500, 
          solidHeader = TRUE,
          plotlyOutput('seasonplot1', height = 500),
+         br(),
+         br(),
          plotlyOutput('seasonplot2', height = 500),
+         br(),
+         br(),
          plotlyOutput('seasonplot3', height = 500)
         )
       ),
@@ -62,8 +68,9 @@ ui <- dashboardPage(
       tabPanel(
         "Episodal Trends",
         box(
-         background = "maroon", 
+         background = "yellow", 
          width = 500, 
+         height = 1000,
          solidHeader = TRUE,
          plotlyOutput('plot2', height = 500)
         )
