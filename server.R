@@ -37,12 +37,12 @@ getTotalSeasons <- function(show.name) {
 
 # MAIN SERVER FUNCTION
 server <- function(input, output) {
-
+  
   tv.series.info <- reactive({
     show.number <- c(1:3)
     show.name <- c("placeholder","placeholder","placeholder")
     total.seasons <- c(-1, -1, -1)
-
+    
     for(current in show.number) {
       text.entry <- input[[paste0("title", current)]]
       
@@ -169,7 +169,7 @@ server <- function(input, output) {
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
       geom_point(size = 3) +
       geom_line(size = 2)
-
+    
     return(graph)
   })
   

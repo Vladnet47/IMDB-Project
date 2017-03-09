@@ -1,4 +1,3 @@
-
 library(httr)
 library(jsonlite)
 library(dplyr)
@@ -44,7 +43,7 @@ ui <- dashboardPage(
                )
                #textOutput('test')
       ),
-                                               
+      
       tabPanel("Raw Data Table", 
                box(background = "yellow", 
                    width = 500, 
@@ -53,7 +52,7 @@ ui <- dashboardPage(
                    
                )
       ),
-                                               
+      
       tabPanel("Seasonal Trends",
                box(background = "green", 
                    width = 500, 
