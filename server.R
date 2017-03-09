@@ -1,3 +1,4 @@
+
 # Libraries
 library(httr)
 library(jsonlite)
@@ -6,61 +7,63 @@ library(ggplot2)
 library(DT)
 library(plotly)
 
-
 # Base variables
-
 base <- "http://www.omdbapi.com/"
-
-# Base functions
-
-# Takes the base URL and query parameters to return json
-getJSON <- function(base, query.params) {
-  response <- GET(base, query = query.params)
-  
-  if(response$status_code == 200) {
-    body <- content(response, "text")
-    json <- fromJSON(body)
-    return(json)
-  } else {
-    return(NULL)
-  }
-}
-
-getTotalSeasons <- function(show.name) {
-  query <- list(t = show.name)
-  json <- getJSON(base, query)
-  
-  if(is.null(json)) {
-    return( -1 )
-  } else {
-    return(as.numeric(json$totalSeasons[]) )
-  }
-}
 
 # MAIN SERVER FUNCTION
 server <- function(input, output) {
   
-  tv.series.info <- reactive({
-    show.number <- c(1:3)
-    show.name <- c("placeholder","placeholder","placeholder")
-    total.seasons <- c(-1, -1, -1)
-    
-    for(current in show.number) {
-      text.entry <- input[[paste0("title", current)]]
-      
-      if(text.entry != "") { # if the current text entry is not empty
-        show.name[current] <- text.entry # replace placeholder with text entry
-        total.seasons[current] <- getTotalSeasons(text.entry) # find total seasons for that text entry
-      }
-    }
-    
-    info <- data.frame(show.number, show.name, total.seasons, stringsAsFactors = FALSE)
-    
-    return( info )
-  })
+  #=========================================== FUNCTIONS ===============================================
   
-  make.Data.Table <- function(x){
-    show.name <- tv.series.info()$show.name[x]
+  getTotalSeasons <- function(show.name) {
+    query <- list(t = show.name)
+    json <- getJSON(base, query)
+    
+    if(is.null(json)) {
+      return( -1 )
+    } else {
+      return(as.numeric(json$totalSeasons) )
+    }
+  }
+  
+  #Takes the base URL and query parameters to return json
+  getJSON <- function(base, query.params) {
+    response <- GET(base, query = query.params)
+    body <- content(response, "text")
+    json <- fromJSON(body)
+    
+    if(json$Response == "True") {
+      return(json)
+    }
+    return(NULL)
+  }
+  
+  checkTextEntry <- function(text.entry) {
+    json <- getJSON(base, list(t = text.entry))
+    
+    if(!is.null(json) && json$Type == "series") {
+      return( json$Title )
+    } else {
+      return( -1 )
+    }
+  }
+  
+  makeSeasonSelection <- function(index) {
+    max.seasons <- tv.series.info()$total.seasons[index]
+    if(max.seasons != -1) {
+      sliderInput(paste0('season', index), "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
+    }
+  }
+  
+  makeIncludeWidget <- function(index) {
+    show.name <- tv.series.info()$show.name[index]
+    if(show.name != "placeholder") {
+      return( checkboxInput(paste0('include', index), "Include in Analysis", value = TRUE) )
+    }
+  }
+  
+  makeDataTable <- function(index){
+    show.name <- tv.series.info()$show.name[index]
     if(show.name != "placeholder") {
       data <- tv.series.episodes() %>% filter(., Show == show.name) 
       colnames(data)[4] <- "Chronological Episode"
@@ -70,9 +73,8 @@ server <- function(input, output) {
     }
   }
   
-  make.Season.Graph <- function(d) {
-    show.name <- tv.series.info()$show.name[d]
-    
+  makeSeasonGraph <- function(index) {
+    show.name <- tv.series.info()$show.name[index]
     
     if(show.name != "placeholder") {
       data <- tv.series.episodes() %>% filter(Show == show.name)
@@ -83,9 +85,30 @@ server <- function(input, output) {
         labs(x = "Episode Number", y = "IMDB Rating") +
         ggtitle(show.name)
       
-      return(ggplotly(graph))  
+      return( ggplotly(graph) )  
     }
   }
+  
+  #=========================================== DATA ===============================================
+  
+  tv.series.info <- reactive({
+    show.number <- c(1:3)
+    show.name <- c("placeholder","placeholder","placeholder")
+    total.seasons <- c(-1, -1, -1)
+    
+    for(current in show.number) {
+      text.entry <- checkTextEntry(input[[paste0("title", current)]])
+      
+      if(text.entry != -1) { # if the current text entry is not empty
+        show.name[current] <- text.entry # replace placeholder with text entry
+        total.seasons[current] <- getTotalSeasons(text.entry) # find total seasons for that text entry
+      }
+    }
+    
+    info <- data.frame(show.number, show.name, total.seasons, stringsAsFactors = FALSE)
+    
+    return( info )
+  })
   
   tv.series.episodes <- reactive({
     
@@ -141,83 +164,55 @@ server <- function(input, output) {
     }
     
     return( all.episodes )
-
   })
+  
+  #=========================================== UI OUTPUTS ===============================================
   
   # Slider Widgets
   output$season1 <- renderUI({
-    max.seasons <- tv.series.info()$total.seasons[1]
-    if(max.seasons > -1) {
-      sliderInput('season1', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
-    }
+    makeSeasonSelection(1)
   })
-  
   output$season2 <- renderUI({
-    max.seasons <- tv.series.info()$total.seasons[2]
-    if(max.seasons > -1) {
-      sliderInput('season2', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
-    }
+    makeSeasonSelection(2)
   })
-  
   output$season3 <- renderUI({
-    max.seasons <- tv.series.info()$total.seasons[3]
-    if(max.seasons > -1) {
-      sliderInput('season3', "Seasons", value = c(1, max.seasons), min = 1, max = max.seasons)
-    }
+    makeSeasonSelection(3)
   })
   
   # Checkbox Widgets
   output$include1 <- renderUI({
-    show.name <- tv.series.info()$show.name[1]
-    if(show.name != "placeholder") {
-      checkboxInput('include1', "Include in Analysis", value = TRUE)
-    }
+    makeIncludeWidget(1)
   })
-  
   output$include2 <- renderUI({
-    show.name <- tv.series.info()$show.name[2]
-    if(show.name != "placeholder") {
-      checkboxInput('include2', "Include in Analysis", value = TRUE)
-    }
+    makeIncludeWidget(2)
   })
-  
   output$include3 <- renderUI({
-    show.name <- tv.series.info()$show.name[3]
-    if(show.name != "placeholder") {
-      checkboxInput('include3', "Include in Analysis", value = TRUE)
-    }
+    makeIncludeWidget(3)
   })
   
+  # Data Tables
   output$table1 <- renderDataTable({
-    formatStyle(datatable(tv.series.info(), rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
+    makeDataTable(1)
   })
-  
   output$table2 <- renderDataTable({
-
-    make.Data.Table(1)
+    makeDataTable(2)
   })
-  
   output$table3 <- renderDataTable({
-    make.Data.Table(2)
-
+    makeDataTable(3)
   })
   
-  output$table4 <- renderDataTable({
-    make.Data.Table(3)
-  })
-  
+  # Seasonal Plots
   output$seasonplot1 <- renderPlotly({
-    make.Season.Graph(1)
+    makeSeasonGraph(1)
   })
-  
   output$seasonplot2 <- renderPlotly({
-    make.Season.Graph(2)
+    makeSeasonGraph(2)
   })
-  
   output$seasonplot3 <- renderPlotly({
-    make.Season.Graph(3)
+    makeSeasonGraph(3)
   })
   
+  # Chronological Graph
   output$plot2 <- renderPlotly({
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show)) +
       geom_point() +
@@ -225,9 +220,8 @@ server <- function(input, output) {
       labs(x = "Episodes Chronologically", y = "IMDB Rating") +
       geom_smooth(method = "lm", se = FALSE)
     
-    return(ggplotly(graph))
+    return( ggplotly(graph) )
   })
 }
-
 
 shinyServer(server)

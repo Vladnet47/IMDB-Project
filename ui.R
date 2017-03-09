@@ -11,7 +11,8 @@ library(plotly)
 ui <- dashboardPage( 
   
   skin = "purple",
-  dashboardHeader(title = "Exploring the OMDb API", titleWidth = 300),
+  
+  dashboardHeader(title = "TV Show Analysis", titleWidth = 300),
   
   dashboardSidebar(
     width = 300,
@@ -34,45 +35,38 @@ ui <- dashboardPage(
     tabsetPanel(
       
       type = 'tabs',
-      
-      
-      tabPanel("Total Seasons", 
-               box(background = "aqua", 
-                   width = 5, 
-                   solidHeader = TRUE,
-                   dataTableOutput('table1', height = 300, width = 400)
-               )
-               #textOutput('test')
-      ),
-      
-      tabPanel("Raw Data Table", 
-               box(background = "light-blue", 
-                   width = 500, 
-                   solidHeader = TRUE,
-                   dataTableOutput('table2', height = 500),
-                   dataTableOutput('table3', height = 500),
-                   dataTableOutput('table4', height = 500)
-                   
-               )
-      ),
-      
-      tabPanel("Seasonal Trends",
-               box(background = "green", 
-                   width = 500, 
-                   solidHeader = TRUE,
-                   plotlyOutput('seasonplot1', height = 500),
-                   plotlyOutput('seasonplot2', height = 500),
-                   plotlyOutput('seasonplot3', height = 500)
-               )
-      ),
-      
-      tabPanel("Episodal Trends",
-               box(background = "maroon", 
-                   width = 500, 
-                   solidHeader = TRUE,
-                   plotlyOutput('plot2', height = 500)
 
-               )
+      tabPanel(
+        "Raw Data Table", 
+        box(background = "light-blue", 
+           width = 500, 
+           solidHeader = TRUE,
+           dataTableOutput('table1', height = 500),
+           dataTableOutput('table2', height = 500),
+           dataTableOutput('table3', height = 500)
+        )
+      ),
+      
+      tabPanel(
+        "Seasonal Trends",
+        box(
+         background = "green", 
+         width = 500, 
+         solidHeader = TRUE,
+         plotlyOutput('seasonplot1', height = 500),
+         plotlyOutput('seasonplot2', height = 500),
+         plotlyOutput('seasonplot3', height = 500)
+        )
+      ),
+      
+      tabPanel(
+        "Episodal Trends",
+        box(
+         background = "maroon", 
+         width = 500, 
+         solidHeader = TRUE,
+         plotlyOutput('plot2', height = 500)
+        )
       )
     )
   )
