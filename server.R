@@ -64,19 +64,15 @@ server <- function(input, output) {
   
   makeDataTable <- function(index){
     show.name <- tv.series.info()$show.name[index]
-    if(show.name != "placeholder") {
       data <- tv.series.episodes() %>% filter(., Show == show.name) 
       colnames(data)[4] <- "Chronological Episode"
       colnames(data)[5] <- "Episode Title"
       colnames(data)[6] <- "IMDb Rating"
       formatStyle(datatable(data, rownames = FALSE), columns = c(1:7), color = "black", backgroundColor = "#99d6ff")
-    }
   }
   
   makeSeasonGraph <- function(index) {
     show.name <- tv.series.info()$show.name[index]
-    
-    if(show.name != "placeholder") {
       data <- tv.series.episodes() %>% filter(Show == show.name)
       data$Season <- factor(data$Season)
       graph <- ggplot(data , aes(x = Episode, y = imdbRating, color = Season, group = Season)) +
@@ -86,7 +82,6 @@ server <- function(input, output) {
         ggtitle(show.name)
       
       return( ggplotly(graph) )  
-    }
   }
   
   #=========================================== DATA ===============================================
@@ -194,28 +189,53 @@ server <- function(input, output) {
   
   # Data Tables
   output$table1 <- renderDataTable({
+    if(tv.series.info()$show.name[1] != "placeholder") {
     makeDataTable(1)
+    }else{
+      stop("Please Enter A Real TV Show in The Widgets Panel")
+    }
   })
   output$table2 <- renderDataTable({
-    makeDataTable(2)
+    if(tv.series.info()$show.name[2] != "placeholder") {
+      makeDataTable(2)
+    }else{
+      stop()
+    }
   })
   output$table3 <- renderDataTable({
-    makeDataTable(3)
+    if(tv.series.info()$show.name[3] != "placeholder") {
+      makeDataTable(3)
+    }else{
+      stop()
+    }
   })
   
   # Seasonal Plots
   output$seasonplot1 <- renderPlotly({
+    if(tv.series.info()$show.name[1] != "placeholder"){
     makeSeasonGraph(1)
+    }else{
+      stop("Please Enter A Real TV Show in The Widgets Panel")
+    }
   })
   output$seasonplot2 <- renderPlotly({
-    makeSeasonGraph(2)
+    if(tv.series.info()$show.name[2] != "placeholder"){
+      makeSeasonGraph(2)
+    }else{
+      stop()
+    }
   })
   output$seasonplot3 <- renderPlotly({
-    makeSeasonGraph(3)
+    if(tv.series.info()$show.name[3] != "placeholder"){
+      makeSeasonGraph(3)
+    }else{
+      stop()
+    }
   })
   
   # Chronological Graph
   output$plot2 <- renderPlotly({
+    if(!is.null(tv.series.episodes()$Episode.Chronological)){
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show)) +
       geom_point() +
       geom_line() +
@@ -223,6 +243,10 @@ server <- function(input, output) {
       geom_smooth(method = "lm", se = FALSE)
     
     return( ggplotly(graph) )
+  }else{
+    stop("Please Enter a Real TV Show in the Widgets Panel")
+  }
+  
   })
 }
 
