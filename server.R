@@ -59,7 +59,6 @@ server <- function(input, output) {
     return( info )
   })
   
-
   make.Data.Table <- function(x){
     show.name <- tv.series.info()$show.name[x]
     if(show.name != "placeholder") {
@@ -71,12 +70,25 @@ server <- function(input, output) {
     }
   }
   
+  make.Season.Graph <- function(d) {
+    show.name <- tv.series.info()$show.name[d]
+    
+    data <- tv.series.episodes() %>% filter(., Show == show.name)
+    if(show.name != "placeholder") {
+      graph <- ggplot(data , aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
+        geom_point(size = 3) +
+        geom_line(size = 2) +
+        ggtitle(show.name)
+      
+      return(graph)  
+    }
+  }
+  
   tv.series.episodes <- reactive({
     
     # Initialize outside for loop
     all.episodes <- data.frame(stringsAsFactors = FALSE)
     
-
     # Show range is all shows that are not called 'placeholder'
     show.range <- tv.series.info()$show.number[tv.series.info()$show.name != "placeholder"]
     
@@ -85,7 +97,7 @@ server <- function(input, output) {
       
       # Check if 'Include in Analysis' is selected in UI
       if(input[[paste0('include', show)]] == TRUE) {
-        
+
         # Initialize outside for loop
         show.episodes <- data.frame(stringsAsFactors = FALSE)
         
@@ -184,21 +196,23 @@ server <- function(input, output) {
   
   output$table3 <- renderDataTable({
     make.Data.Table(2)
+
   })
   
   output$table4 <- renderDataTable({
     make.Data.Table(3)
   })
   
+  output$seasonplot1 <- renderPlot({
+    make.Season.Graph(1)
+  })
   
-
-  output$plot1 <- renderPlot({
-    graph <- ggplot(data = tv.series.episodes(), aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
-      labs(x = "Episode Number", y = "IMDB Rating")
-      geom_point(size = 3) +
-      geom_line(size = 2)
-    
-    return(graph)
+  output$seasonplot2 <- renderPlot({
+    make.Season.Graph(2)
+  })
+  
+  output$seasonplot3 <- renderPlot({
+    make.Season.Graph(3)
   })
   
   output$plot2 <- renderPlotly({
@@ -208,11 +222,9 @@ server <- function(input, output) {
       labs(x = "Episodes Chronologically", y = "IMDB Rating") +
       geom_smooth(method = "lm", se = FALSE)
     
-
     return(ggplotly(graph))
   })
 }
-
 
 
 shinyServer(server)

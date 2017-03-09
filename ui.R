@@ -60,7 +60,9 @@ ui <- dashboardPage(
                box(background = "green", 
                    width = 500, 
                    solidHeader = TRUE,
-                   plotOutput('plot1', height = 500)
+                   plotOutput('seasonplot1', height = 500),
+                   plotOutput('seasonplot2', height = 500),
+                   plotOutput('seasonplot3', height = 500)
                )
       ),
       
