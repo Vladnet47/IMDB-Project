@@ -73,14 +73,17 @@ server <- function(input, output) {
   make.Season.Graph <- function(d) {
     show.name <- tv.series.info()$show.name[d]
     
-    data <- tv.series.episodes() %>% filter(., Show == show.name)
+    
     if(show.name != "placeholder") {
-      graph <- ggplot(data , aes(x = Episode, y = imdbRating, color = factor(Season), group = factor(Season))) +
+      data <- tv.series.episodes() %>% filter(Show == show.name)
+      data$Season <- factor(data$Season)
+      graph <- ggplot(data , aes(x = Episode, y = imdbRating, color = Season, group = Season)) +
         geom_point(size = 3) +
         geom_line(size = 2) +
+        labs(x = "Episode Number", y = "IMDB Rating") +
         ggtitle(show.name)
       
-      return(graph)  
+      return(ggplotly(graph))  
     }
   }
   
@@ -203,15 +206,15 @@ server <- function(input, output) {
     make.Data.Table(3)
   })
   
-  output$seasonplot1 <- renderPlot({
+  output$seasonplot1 <- renderPlotly({
     make.Season.Graph(1)
   })
   
-  output$seasonplot2 <- renderPlot({
+  output$seasonplot2 <- renderPlotly({
     make.Season.Graph(2)
   })
   
-  output$seasonplot3 <- renderPlot({
+  output$seasonplot3 <- renderPlotly({
     make.Season.Graph(3)
   })
   

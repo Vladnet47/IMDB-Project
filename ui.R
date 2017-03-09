@@ -46,7 +46,7 @@ ui <- dashboardPage(
       ),
       
       tabPanel("Raw Data Table", 
-               box(background = "yellow", 
+               box(background = "light-blue", 
                    width = 500, 
                    solidHeader = TRUE,
                    dataTableOutput('table2', height = 500),
@@ -60,9 +60,9 @@ ui <- dashboardPage(
                box(background = "green", 
                    width = 500, 
                    solidHeader = TRUE,
-                   plotOutput('seasonplot1', height = 500),
-                   plotOutput('seasonplot2', height = 500),
-                   plotOutput('seasonplot3', height = 500)
+                   plotlyOutput('seasonplot1', height = 500),
+                   plotlyOutput('seasonplot2', height = 500),
+                   plotlyOutput('seasonplot3', height = 500)
                )
       ),
       
