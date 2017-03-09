@@ -204,6 +204,7 @@ server <- function(input, output) {
     graph <- ggplot(data = tv.series.episodes(), aes(x = Episode.Chronological, y = imdbRating, color = Show)) +
       geom_point() +
       geom_line() +
+      labs(x = "Episodes Chronologically", y = "IMDB Rating") +
       geom_smooth(method = "lm", se = FALSE)
     
 
