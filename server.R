@@ -96,6 +96,8 @@ server <- function(input, output) {
     show.name <- c("placeholder","placeholder","placeholder")
     total.seasons <- c(-1, -1, -1)
     
+    info <- data.frame(show.number, show.name, total.seasons, stringsAsFactors = FALSE)
+    
     for(current in show.number) {
       text.entry <- checkTextEntry(input[[paste0("title", current)]])
       
